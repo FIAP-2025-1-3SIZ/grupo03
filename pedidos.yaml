@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+  title: API de Gerenciamento de Pedidos
+  description: API para criação, consulta, atualização e listagem de pedidos.
+  version: 1.0.0
+
+servers:
+  - url: https://api.exemplo.com
+
+paths:
+  /pedido:
+    post:
+      summary: Criar um novo pedido
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clienteId, itens, enderecoEntrega]
+              properties:
+                clienteId:
+                  type: string
+                itens:
+                  type: array
+                  items:
+                    type: object
+                    required: [produtoId, quantidade]
+                    properties:
+                      produtoId:
+                        type: string
+                      quantidade:
+                        type: integer
+                enderecoEntrega:
+                  type: string
+      responses:
+        "201":
+          description: Pedido criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pedidoId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [PENDENTE, PROCESSANDO, ENVIADO, ENTREGUE, CANCELADO]
+                  criadoEm:
+                    type: string
+                    format: date-time
+                  atualizadoEm:
+                    type: string
+                    format: date-time
+        "400":
+          description: Dados inválidos
+        "401":
+          description: Não autenticado
+
+  /pedidos:
+    get:
+      summary: Listar pedidos
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDENTE, PROCESSANDO, ENVIADO, ENTREGUE, CANCELADO]
+        - name: clienteId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pedidoId:
+                      type: string
+                    clienteId:
+                      type: string
+                    status:
+                      type: string
+                    criadoEm:
+                      type: string
+                      format: date-time
+        "400":
+          description: Parâmetros inválidos
+        "401":
+          description: Não autenticado
+        "403":
+          description: Acesso não permitido
+
+  /pedidos/{id}:
+    get:
+      summary: Consultar pedido por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pedido encontrado
+        "400":
+          description: ID inválido
+        "401":
+          description: Não autenticado
+        "403":
+          description: Acesso negado
+        "404":
+          description: Pedido não encontrado
+
+    patch:
+      summary: Atualizar dados de um pedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enderecoEntrega:
+                  type: string
+                itens:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      produtoId:
+                        type: string
+                      quantidade:
+                        type: integer
+      responses:
+        "200":
+          description: Pedido atualizado com sucesso
+        "400":
+          description: Dados inválidos
+        "401":
+          description: Não autenticado
+        "403":
+          description: Acesso negado
+        "404":
+          description: Pedido não encontrado
+        "409":
+          description: Pedido em status não alterável
+
+  /pedidos/{id}/status:
+    patch:
+      summary: Atualizar status de um pedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [PENDENTE, PROCESSANDO, ENVIADO, ENTREGUE, CANCELADO]
+      responses:
+        "200":
+          description: Status atualizado com sucesso
+        "400":
+          description: Status inválido ou transição não permitida
+        "401":
+          description: Não autenticado
+        "403":
+          description: Acesso negado
+        "404":
+          description: Pedido não encontrado
+        "409":
+          description: Pedido em status não alterável
